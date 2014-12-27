@@ -16,7 +16,7 @@ $ ./sbt assembly
 
 ```bash
 $ ./spark-submit \
-  --class "SimpleApp" \
+  --class "SparkDeserialization" \
   --master local[4] \
   $PATH_TO_BUILD/Offline-Service-Statistics-Example-assembly-1.0.jar
 ```
