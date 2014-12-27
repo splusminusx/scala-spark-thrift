@@ -1,19 +1,15 @@
 # scala-spark-thrift
-
 Пример десериализации сообщений закодированных TBinaryProtocol с использованием Spark.
 
 ## Установка
-
 Качаем и устанавливаем Spark 1.1.1 [отсюда](http://spark.apache.org/downloads.html).
 
 ## Сборка
-
 ```bash
-$ ./sbt assembly
+$ ./sbt scrooge-gen assembly
 ```
 
 ## Запуск
-
 ```bash
 $ ./spark-submit \
   --class "SparkDeserialization" \
