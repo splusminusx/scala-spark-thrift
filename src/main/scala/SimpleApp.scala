@@ -5,10 +5,9 @@ import java.io._
 import org.apache.thrift.transport.TMemoryInputTransport
 import org.apache.thrift.protocol._
 import scala.collection.mutable
-import scala.collection.mutable.HashMap
 import stats.ThriftMessageHandler
 import example._
-import scala.collection.mutable.MutableList
+import scala.collection.mutable.{MutableList, HashMap}
 
 
 /**
@@ -16,7 +15,7 @@ import scala.collection.mutable.MutableList
  */
 object SparkDeserialization {
   protected val protocolFactory = new TBinaryProtocol.Factory(true, true)
-  protected val handlerMap = new HashMap[String, ThriftMessageHandler]
+  protected val handlerMap = new mutable.HashMap[String, ThriftMessageHandler]
   handlerMap.put("getState", new ExampleGetStateHandler())
 
   def decode(request: Array[Byte]): (Int, String) = {
@@ -44,14 +43,13 @@ object SimpleApp {
     while (dis.available() != 0) {
       val packetLength = dis.readInt()
       if (dis.available() >= packetLength) {
-        val buf = new Array[Byte](512)
+        val buf = new Array[Byte](packetLength)
         dis.read(buf, 0, packetLength)
         data = data :+ buf
       }
     }
 
-
-    val conf = new SparkConf().setAppName("Simple Application").setMaster("local[4]")
+    val conf = new SparkConf().setAppName("Simple Application")
     val sc = new SparkContext(conf)
     val logData = sc.makeRDD[Array[Byte]](data)
 
