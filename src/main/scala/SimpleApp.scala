@@ -1,16 +1,6 @@
-/*
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
-*/
-
-/**
- * Пример формата логов для обработки.
- *
- * event: key1=value1, key2=value2
- */
-
-
 import java.io._
 import org.apache.thrift.transport.TMemoryInputTransport
 import org.apache.thrift.protocol._
@@ -29,7 +19,7 @@ object SparkDeserialization {
   protected val handlerMap = new HashMap[String, ThriftMessageHandler]
   handlerMap.put("getState", new ExampleGetStateHandler())
 
-  def decode(request: Array[Byte]): String = {
+  def decode(request: Array[Byte]): (Int, String) = {
     val inputTransport = new TMemoryInputTransport(request)
     val iprot = protocolFactory.getProtocol(inputTransport)
 
@@ -38,7 +28,7 @@ object SparkDeserialization {
     func match {
       case Some(fn) =>
         fn(msg.`type`, iprot, msg.seqid)
-      case _ => ""
+      case _ => (0, "")
     }
   }
 }
@@ -46,11 +36,10 @@ object SparkDeserialization {
 
 object SimpleApp {
   def main(args: Array[String]) {
-    val filename = "/home/stx/work/projects/Offline-Service-Statistics-Example/thrift_method_call.bin"
+    val filename = "/home/stx/projects/scala-spark-thrift/thrift_method_call.bin"
     val bis = new BufferedInputStream(new FileInputStream(filename))
     val dis = new DataInputStream(bis)
     var data: mutable.MutableList[Array[Byte]] = new mutable.MutableList[Array[Byte]]()
-
 
     while (dis.available() != 0) {
       val packetLength = dis.readInt()
@@ -61,11 +50,10 @@ object SimpleApp {
       }
     }
 
-    /*
+
     val conf = new SparkConf().setAppName("Simple Application").setMaster("local[4]")
     val sc = new SparkContext(conf)
     val logData = sc.makeRDD[Array[Byte]](data)
-    */
 
     /*
     val countMap = logData
@@ -84,11 +72,9 @@ object SimpleApp {
     }
     */
 
-    /*
-    val logLine = logData.map(SparkDeserialization.decode).reduce((a, b) => a + b)
+    val logLine = logData.map(SparkDeserialization.decode).reduceByKey((a, b) => a + "; " + b)
     logLine.foreach {
-      case l => println(l)
+      case (seqId: Int, log: String) => println("SeqId=" + seqId + " : " + log)
     }
-    */
   }
 }

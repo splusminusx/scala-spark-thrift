@@ -28,13 +28,13 @@ object ThriftMethodCallSerialization {
   }
 
   def main(args: Array[String]): Unit = {
-    val filename = "/home/stx/work/projects/Offline-Service-Statistics-Example/thrift_method_call.bin"
+    val filename = "/home/stx/projects/scala-spark-thrift/thrift_method_call.bin"
     val stream = new DataOutputStream(new FileOutputStream(filename))
 
     // Thrift Method name
     val name = "getState"
 
-    for (id <- Iterator.range(0, 20)) {
+    for (id <- Iterator.range(0, 2000)) {
       // encode data
       val buf = new TMemoryBuffer(512)
       val args = getState$args(id.toString)
@@ -43,7 +43,7 @@ object ThriftMethodCallSerialization {
       stream.write(buf.getArray, 0, buf.length)
     }
 
-    for (id <- Iterator.range(0, 10)) {
+    for (id <- Iterator.range(0, 1000)) {
       // encode data
       val buf = new TMemoryBuffer(512)
       val args = getState$result(success = Some(true))

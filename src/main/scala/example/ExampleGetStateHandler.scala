@@ -10,13 +10,13 @@ import stats.ThriftMessageHandler
  * Обработчик метода getState.
  */
 class ExampleGetStateHandler extends ThriftMessageHandler {
-  def apply(messageType: Byte, iprot: TProtocol, seqId: Int): String = {
+  def apply(messageType: Byte, iprot: TProtocol, seqId: Int): (Int, String) = {
     messageType match {
       case TMessageType.CALL => val args = getState$args.decode(iprot)
-        "Get State method call. Args id=" + args.id
+        (seqId, "Get State method call. Args id=" + args.id)
 
       case TMessageType.REPLY => val result = getState$result.decode(iprot)
-        "Get State method cal result. Success=" + result.success
+        (seqId, "Get State method cal result. Success=" + result.success)
     }
   }
 }

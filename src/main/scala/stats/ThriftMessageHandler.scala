@@ -13,5 +13,5 @@ trait ThriftMessageHandler {
    * @param iprot - Thrift протокол.
    * @param seqId - идентификатор последовательности.
    */
-  def apply(messageType: Byte, iprot: TProtocol, seqId: Int): String
+  def apply(messageType: Byte, iprot: TProtocol, seqId: Int): (Int, String)
 }

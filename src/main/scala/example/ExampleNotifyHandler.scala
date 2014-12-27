@@ -10,12 +10,12 @@ import stats.ThriftMessageHandler
  * Обработчик метода getState.
  */
 class ExampleNotifyHandler extends ThriftMessageHandler {
-  def apply(messageType: Byte, iprot: TProtocol, seqId: Int): String = {
+  def apply(messageType: Byte, iprot: TProtocol, seqId: Int): (Int, String) = {
     messageType match {
       case TMessageType.CALL => val args = notify$args.decode(iprot)
-        "Notify method call. Args id=" + args.id + ", state=" + args.state.toString
+        (seqId, "Notify method call. Args id=" + args.id + ", state=" + args.state.toString)
 
-      case TMessageType.REPLY => "Get State method cal result"
+      case TMessageType.REPLY => (seqId, "Get State method call result")
     }
   }
 }
