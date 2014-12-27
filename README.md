@@ -2,17 +2,17 @@
 
 Пример десериализации сообщений закодированных TBinaryProtocol с использованием Spark.
 
-# Установка
+## Установка
 
-Качаем и устанавливаем подходящую версию Spark [отсюда](http://spark.apache.org/downloads.html).
+Качаем и устанавливаем Spark 1.1.1 [отсюда](http://spark.apache.org/downloads.html).
 
-# Сборка
+## Сборка
 
 ```bash
 $ ./sbt assembly
 ```
 
-# Запуск
+## Запуск
 
 ```bash
 $ ./spark-submit \
