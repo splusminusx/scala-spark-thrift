@@ -3,19 +3,24 @@ package example
 
 import org.apache.thrift.protocol._
 import service.example.Example.notify$args
-import stats.ThriftMessageHandler
+import stats.{VoidReplay, ThriftCall, ThriftMessageHandler, ThriftMessage}
+
+
+case class ExampleNotifyArgs(id: String, state: Boolean)
+case class ExampleNotifyCall(seqId: Int, args: ExampleNotifyArgs) extends ThriftCall
+case class ExampleNotifyReplay(seqId: Int) extends VoidReplay
 
 
 /**
  * Обработчик метода getState.
  */
-class ExampleNotifyHandler extends ThriftMessageHandler {
-  def apply(messageType: Byte, iprot: TProtocol, seqId: Int): (Int, String) = {
-    messageType match {
+class ExampleNotifyHandler extends ThriftMessageHandler{
+  def apply(message: TMessage, iprot: TProtocol): ThriftMessage = {
+    message.`type` match {
       case TMessageType.CALL => val args = notify$args.decode(iprot)
-        (seqId, "Notify method call. Args id=" + args.id + ", state=" + args.state.toString)
-
-      case TMessageType.REPLY => (seqId, "Get State method call result")
+        ExampleNotifyCall(message.seqid, ExampleNotifyArgs(args.id, args.state))
+        
+      case TMessageType.REPLY => ExampleNotifyReplay(message.seqid)
     }
   }
 }

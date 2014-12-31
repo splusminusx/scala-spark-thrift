@@ -15,3 +15,5 @@ libraryDependencies ++= Seq(
   "com.twitter" %% "scrooge-core" % "3.16.3",
   "com.twitter" %% "finagle-thrift" % "6.5.0"
 )
+
+libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.0" % "test"

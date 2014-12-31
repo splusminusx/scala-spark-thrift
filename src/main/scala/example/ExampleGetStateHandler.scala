@@ -3,20 +3,29 @@ package example
 
 import org.apache.thrift.protocol._
 import service.example.Example.{getState$args, getState$result}
-import stats.ThriftMessageHandler
+import stats.{ThriftMessage, ThriftReplay, ThriftCall, ThriftMessageHandler}
+
+
+case class ExampleGetStateArgs(id: String)
+case class ExampleGetStateCall(seqId: Int, args: ExampleGetStateArgs)
+  extends ThriftCall
+case class ExampleGetStateReplay(seqId: Int, success: Option[Boolean], error: Option[Any])
+  extends ThriftReplay
+case class ExampleGetState(seqId: Int, args: ExampleGetStateArgs, success: Option[Boolean], error: Option[Any])
+  extends ThriftMessage
 
 
 /**
  * Обработчик метода getState.
  */
 class ExampleGetStateHandler extends ThriftMessageHandler {
-  def apply(messageType: Byte, iprot: TProtocol, seqId: Int): (Int, String) = {
-    messageType match {
+  def apply(message: TMessage, iprot: TProtocol): Any = {
+    message.`type` match {
       case TMessageType.CALL => val args = getState$args.decode(iprot)
-        (seqId, "Get State method call. Args id=" + args.id)
+        ExampleGetStateCall(message.seqid, ExampleGetStateArgs(args.id))
 
       case TMessageType.REPLY => val result = getState$result.decode(iprot)
-        (seqId, "Get State method cal result. Success=" + result.success)
+        ExampleGetStateReplay(message.seqid, result.success, None)
     }
   }
 }

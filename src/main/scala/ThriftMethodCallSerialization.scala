@@ -28,7 +28,7 @@ object ThriftMethodCallSerialization {
   }
 
   def main(args: Array[String]): Unit = {
-    val filename = "/home/stx/projects/scala-spark-thrift/thrift_method_call.bin"
+    val filename = "/home/stx/work/projects/Offline-Service-Statistics-Example/thrift_method_call.bin"
     val stream = new DataOutputStream(new FileOutputStream(filename))
 
     // Thrift Method name
