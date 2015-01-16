@@ -1,6 +1,6 @@
 package stats
 
-
+import com.twitter.scrooge.{ThriftStructCodec3, ThriftStruct}
 import org.apache.thrift.protocol._
 
 
@@ -45,10 +45,23 @@ object NullMessage extends ThriftMessage {
 /**
  * Обработчик Thrift сообщения.
  */
-trait ThriftMessageHandler {
+class ThriftStructDecoder[A <: ThriftStruct, R <: ThriftStruct] {
   /**
    * @param message - Thrift сообщение.
    * @param iprot - Thrift протокол.
    */
-  def apply(message: TMessage, iprot: TProtocol): ThriftMessage
+  def apply(message: TMessage, iprot: TProtocol)(implicit args: ThriftStructCodec3[A], result: ThriftStructCodec3[R]): ThriftStruct = {
+    message.`type` match {
+      case TMessageType.CALL => args.decode(iprot)
+      case TMessageType.REPLY => result.decode(iprot)
+    }
+  }
+}
+
+
+/**
+ * Пустая Thrift Структура.
+ */
+class NullThriftStruct extends ThriftStruct {
+  def write(oprot : org.apache.thrift.protocol.TProtocol) : scala.Unit = {}
 }
