@@ -16,3 +16,8 @@ $ ./spark-submit \
   --master local[4] \
   $PATH_TO_BUILD/Offline-Service-Statistics-Example-assembly-1.0.jar
 ```
+
+## Тесты
+```bash
+./sbt test
+```
