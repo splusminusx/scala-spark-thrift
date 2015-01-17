@@ -1,61 +1,50 @@
+import com.twitter.scrooge.ThriftStruct
+import livetex.io.stream.MessageStream
+import livetex.io.thrift.{MessageCodec => codec}
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 import java.io._
-import org.apache.thrift.transport.TMemoryInputTransport
-import org.apache.thrift.protocol._
-import scala.collection.mutable
-import stats.{ThriftMessage, ThriftMessageHandler, NullMessage}
-import example._
+
+import org.apache.spark.rdd.RDD
+import org.apache.thrift.protocol.TMessage
+import service.example.Example.{notify$result, notify$args, getState$result, getState$args}
 
 
 /**
  * Десериализация вызовов Thrift методов.
  */
 object SparkDeserialization {
-  protected val protocolFactory = new TBinaryProtocol.Factory(true, true)
-  protected val handlerMap = new mutable.HashMap[String, ThriftMessageHandler]
-
-  def decode(request: Array[Byte]): ThriftMessage = {
-    val inputTransport = new TMemoryInputTransport(request)
-    val iprot = protocolFactory.getProtocol(inputTransport)
-
-    val msg = iprot.readMessageBegin()
-    val func = handlerMap.get(msg.name)
-    func match {
-      case Some(fn) =>
-        fn(msg, iprot)
-      case _ => NullMessage
-    }
-  }
-
   def main(args: Array[String]) {
-    handlerMap.put("getState", new ExampleGetStateHandler())
-    val dis = new DataInputStream(new FileInputStream(args(0)))
-    val data = Stream.continually({
-      val packetLength = dis.readInt()
-      val buf = new Array[Byte](packetLength)
-      dis.read(buf, 0, packetLength)
-      buf
-    }).takeWhile(_ => dis.available() != 0).toList
+    codec.buildMethodDecoder("getState", getState$args, getState$result)
+    codec.buildMethodDecoder("notify", notify$args, notify$result)
+
+    val filename = "/home/stx/thrift_method_call.bin"
+    val stream = new DataInputStream(new BufferedInputStream(new FileInputStream(filename)))
+    var messages = List[Array[Byte]]()
+
+    while (stream.available() != 0) {
+      val data = MessageStream.read(stream)
+      if (data.length != 0) {
+        messages ::= data
+      }
+    }
 
     val conf = new SparkConf().setAppName("Simple Application")
     val sc = new SparkContext(conf)
-    val logData = sc.makeRDD[Array[Byte]](data)
+    val logs = sc.makeRDD[Array[Byte]](messages)
 
-    /*
-    val logLine = logData.map(decode).map(m => (m.seqId, m)).reduceByKey((a, b) => {
-      (a, b) match {
-        case (ExampleGetStateCall(seqId, id), ExampleGetStateResult(_, success)) => ExampleGetState(seqId, id, success)
-        case (ExampleGetStateResult(_, success), ExampleGetStateCall(seqId, id)) => ExampleGetState(seqId, id, success)
-        case (ExampleGetState(seqId, id, success), _) => ExampleGetState(seqId, id, success)
-        case (_, ExampleGetState(seqId, id, success)) => ExampleGetState(seqId, id, success)
-      }
-    })
-    logLine.foreach {
-      case (seqId, ExampleGetState(_,id, Some(success))) => println("SeqId=" + seqId + " : id=" + id.toString + " success=" + success.toString)
-      case (seqId, _) => println("SeqId=" + seqId + " : without result")
+    val result = logs
+      .map(codec.decode)
+      .filter(x => x._1.name == "notify")
+      .map[(String, (Int, Boolean))]({
+        case (m: TMessage, notify$args(state, id)) => (id, (m.seqid, state))
+        case _ => ("", (0, false))
+      }).reduceByKey((a, b) => if (a._1 > b._1) a else b)
+
+    result.foreach {
+      case (id, (_, state)) => println("notify: id=" + id + " state=" + state)
+      case _ =>
     }
-    */
   }
 }
