@@ -19,5 +19,5 @@ $ ./spark-submit \
 
 ## Тесты
 ```bash
-./sbt test
+$ ./sbt test
 ```
