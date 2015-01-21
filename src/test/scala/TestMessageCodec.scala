@@ -1,11 +1,12 @@
 import org.apache.thrift.protocol.TMessageType
 import org.scalatest.FunSuite
-import livetex.io.thrift.{MessageCodec => codec}
+import livetex.io.thrift.MessageCodec
 import service.example.Example.{getState$args, getState$result}
 
 
 class TestMessageCodec extends FunSuite{
   test("Message decoder should decode Thrift structure") {
+    val codec = new MessageCodec
     codec.buildMethodDecoder("getState", getState$args, getState$result)
 
     val name = "getState"

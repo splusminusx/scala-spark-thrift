@@ -1,6 +1,6 @@
 import java.io._
 import com.twitter.scrooge.ThriftStruct
-import livetex.io.thrift.{ MessageCodec => codec }
+import livetex.io.thrift.MessageCodec
 import livetex.io.stream.MessageStream
 import org.apache.thrift.protocol.TMessage
 import service.example.Example.{getState$args, getState$result, notify$args, notify$result}
@@ -11,6 +11,7 @@ import service.example.Example.{getState$args, getState$result, notify$args, not
  */
 object MethodDeserialization {
   def main(args: Array[String]): Unit = {
+    val codec = new MessageCodec
     codec.buildMethodDecoder("getState", getState$args, getState$result)
     codec.buildMethodDecoder("notify", notify$args, notify$result)
 
