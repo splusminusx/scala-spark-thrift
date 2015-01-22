@@ -1,7 +1,7 @@
 import java.io._
-import livetex.io.thrift.{MessageCodec => codec}
+import livetex.io.thrift.MessageCodec
 import livetex.io.stream.MessageStream
-import service.example.Example.{getState$args, getState$result, getUnsafeState$args, getUnsafeState$result, notify$args, notify$result}
+import service.example.Example.{getState$args, getState$result, notify$args, notify$result}
 
 
 /**
@@ -9,6 +9,7 @@ import service.example.Example.{getState$args, getState$result, getUnsafeState$a
  */
 object MethodSerialization {
   def main(args: Array[String]): Unit = {
+    val codec = new MessageCodec
     val filename = "/home/stx/thrift_method_call.bin"
     val initialState = false
     val finalState = true

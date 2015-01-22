@@ -10,7 +10,7 @@ import scala.collection.mutable
 /**
  * Кодек для работы с сообщениями Thrift протокола.
  */
-object MessageCodec {
+class MessageCodec {
   type MethodDecoder = (TMessage, TProtocol) => ThriftStruct
 
   private val protocolFactory = new TBinaryProtocol.Factory(true, true)

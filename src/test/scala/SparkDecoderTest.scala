@@ -1,4 +1,4 @@
-import livetex.io.thrift.{MessageCodec => codec}
+import livetex.io.thrift.MessageCodec
 import livetex.test.SparkTestUtils
 import org.apache.spark.SparkContext._
 import org.apache.thrift.protocol.TMessage
@@ -8,6 +8,7 @@ import service.example.Example.{notify$args, notify$result}
 class SparkDecoderTest extends SparkTestUtils {
   sparkTest("Spark decoder should decode Thrift messages") {
     // parameters
+    val codec = new MessageCodec
     val name = "notify"
     val initialState = false
     val finalState = true
@@ -25,7 +26,12 @@ class SparkDecoderTest extends SparkTestUtils {
 
     // aggregate result
     val result = sc.makeRDD[Array[Byte]](messages)
-      .map(codec.decode)
+      .mapPartitions(valueIterator => {
+        val codec = new MessageCodec
+        codec.buildMethodDecoder(name, notify$args, notify$result)
+        val transformedIterator = valueIterator.map(codec.decode)
+        transformedIterator
+      })
       .filter(x => x._1.name == name)
       .map[(String, (Int, Boolean))]({
         case (m: TMessage, notify$args(state, id)) => (id, (m.seqid, state))

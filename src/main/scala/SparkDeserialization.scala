@@ -1,6 +1,6 @@
 import com.twitter.scrooge.ThriftStruct
 import livetex.io.stream.MessageStream
-import livetex.io.thrift.{MessageCodec => codec}
+import livetex.io.thrift.MessageCodec
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
@@ -16,9 +16,6 @@ import service.example.Example.{notify$result, notify$args, getState$result, get
  */
 object SparkDeserialization {
   def main(args: Array[String]) {
-    codec.buildMethodDecoder("getState", getState$args, getState$result)
-    codec.buildMethodDecoder("notify", notify$args, notify$result)
-
     val filename = "/home/stx/thrift_method_call.bin"
     val stream = new DataInputStream(new BufferedInputStream(new FileInputStream(filename)))
     var messages = List[Array[Byte]]()
@@ -35,12 +32,19 @@ object SparkDeserialization {
     val logs = sc.makeRDD[Array[Byte]](messages)
 
     val result = logs
-      .map(codec.decode)
+      .mapPartitions(valueIterator => {
+        val codec = new MessageCodec
+        codec.buildMethodDecoder("getState", getState$args, getState$result)
+        codec.buildMethodDecoder("notify", notify$args, notify$result)
+        val transformedIterator = valueIterator.map(codec.decode)
+        transformedIterator
+      })
       .filter(x => x._1.name == "notify")
       .map[(String, (Int, Boolean))]({
         case (m: TMessage, notify$args(state, id)) => (id, (m.seqid, state))
         case _ => ("", (0, false))
       }).reduceByKey((a, b) => if (a._1 > b._1) a else b)
+      .collect()
 
     result.foreach {
       case (id, (_, state)) => println("notify: id=" + id + " state=" + state)
