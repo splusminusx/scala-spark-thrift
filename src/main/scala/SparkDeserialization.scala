@@ -1,12 +1,9 @@
-import com.twitter.scrooge.ThriftStruct
-import livetex.io.stream.MessageStream
+import livetex.io.stream.MessageInputStreamReader
 import livetex.io.thrift.MessageCodec
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 import java.io._
-
-import org.apache.spark.rdd.RDD
 import org.apache.thrift.protocol.TMessage
 import service.example.Example.{notify$result, notify$args, getState$result, getState$args}
 
@@ -16,14 +13,15 @@ import service.example.Example.{notify$result, notify$args, getState$result, get
  */
 object SparkDeserialization {
   def main(args: Array[String]) {
-    val filename = "/home/stx/thrift_method_call.bin"
+    val filename = if(args.length > 0) args(0) else "/vagrant/thrift_method_call.bin"
     val stream = new DataInputStream(new BufferedInputStream(new FileInputStream(filename)))
+    val reader = new MessageInputStreamReader(stream)
     var messages = List[Array[Byte]]()
 
     while (stream.available() != 0) {
-      val data = MessageStream.read(stream)
-      if (data.length != 0) {
-        messages ::= data
+      reader.readMessage() match {
+        case Some(data) => messages ::= data
+        case None =>
       }
     }
 

@@ -36,6 +36,5 @@ class TestMessageCodec extends FunSuite{
       case getState$result(success) => assert(success == Some(true), "Wrong \"getState\" result")
       case _ => fail("\"getState\" results not decoded")
     }
-
   }
 }

@@ -1,7 +1,7 @@
 import java.io._
 import com.twitter.scrooge.ThriftStruct
 import livetex.io.thrift.MessageCodec
-import livetex.io.stream.MessageStream
+import livetex.io.stream.MessageInputStreamReader
 import org.apache.thrift.protocol.TMessage
 import service.example.Example.{getState$args, getState$result, notify$args, notify$result}
 
@@ -9,20 +9,21 @@ import service.example.Example.{getState$args, getState$result, notify$args, not
 /**
  * Десериализация вызовов Thrift методов.
  */
-object MethodDeserialization {
+object MessageDeserialization {
   def main(args: Array[String]): Unit = {
     val codec = new MessageCodec
     codec.buildMethodDecoder("getState", getState$args, getState$result)
     codec.buildMethodDecoder("notify", notify$args, notify$result)
 
-    val filename = "/home/stx/thrift_method_call.bin"
+    val filename = if(args.length > 0) args(0) else "/home/stx/thrift_method_call.bin"
     val stream = new DataInputStream(new BufferedInputStream(new FileInputStream(filename)))
+    val reader = new MessageInputStreamReader(stream)
     var messages = List[(TMessage, ThriftStruct)]()
 
     while (stream.available() != 0) {
-      val data = MessageStream.read(stream)
-      if (data.length != 0) {
-        messages ::= codec.decode(data)
+      reader.readMessage() match {
+        case Some(data) => messages ::= codec.decode(data)
+        case _ =>
       }
     }
 
@@ -36,7 +37,5 @@ object MethodDeserialization {
           case _ =>
         }
     }
-
-    println(messages.length.toString)
   }
 }
