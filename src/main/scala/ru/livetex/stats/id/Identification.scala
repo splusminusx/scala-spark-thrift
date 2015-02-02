@@ -28,13 +28,14 @@ object Identification {
       case _ => (None, None)
     }
 
-  def countGetIdCallById(rdd: RDD[RawCallReplay]): RDD[(String, Int)] = {
+  def countGetIdCallById(rdd: RDD[RawCallReplay]): RDD[Person] = {
     rdd
       .mapPartitions(decodeGetId)
       .filter(filterMethod)
       .map(extractGetIdData)
-      .filter(x => x._1.isDefined)
+      .filter(_._1.isDefined)
       .map(x => (x._1.getOrElse(DUMMY_KEY), 1))
       .reduceByKey((a, b) => a + b)
+      .map(x => Person(x._1, x._2))
   }
 }
